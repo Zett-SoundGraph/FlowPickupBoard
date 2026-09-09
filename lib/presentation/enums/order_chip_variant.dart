@@ -1,0 +1,1 @@
+enum OrderChipVariant { preparing, ready }
