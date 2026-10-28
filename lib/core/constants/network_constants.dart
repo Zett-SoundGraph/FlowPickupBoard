@@ -14,8 +14,13 @@ class NetworkConstants {
   static const String mqttUsername = 'cafebeta';
   static const String mqttPassword = 'soundgraph@2026';
 
-  // Fixed identity — never change once registered with Message Hub.
-  static const String mqttDeviceId = 'Cafe Beta PickupBoard';
+  // Fixed identity — never change once registered with Message Hub. Stays a
+  // lowercase/hyphenated slug (not "Flow Pickup Board") because this gets
+  // embedded directly into MQTT topic paths
+  // (beta/system/heartbeat/<mqttDeviceId>) — every other topic in the
+  // protocol is all-lowercase/no-space, so a space or mixed case here would
+  // be the odd one out.
+  static const String mqttDeviceId = 'flow-pickup-board';
   // Display label shown on the Message Hub dashboard — safe to change anytime.
-  static const String mqttDeviceName = 'Cafe Beta PickupBoard';
+  static const String mqttDeviceName = 'Flow Pickup Board';
 }
