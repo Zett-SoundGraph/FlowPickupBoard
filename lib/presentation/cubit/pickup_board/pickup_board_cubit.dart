@@ -6,8 +6,7 @@ import 'package:injectable/injectable.dart';
 import 'package:pickup_board/core/constants/index.dart';
 import 'package:pickup_board/core/utils/log.dart';
 import 'package:pickup_board/domain/entities/index.dart';
-import 'package:pickup_board/domain/usecases/device/get_device_info_usecase.dart';
-import 'package:pickup_board/domain/usecases/device/observe_device_info_changed_usecase.dart';
+import 'package:pickup_board/domain/repositories/device_repository.dart';
 import 'package:pickup_board/domain/usecases/index.dart';
 import 'package:pickup_board/presentation/cubit/pickup_board/pickup_board_state.dart';
 
@@ -17,12 +16,11 @@ class PickupBoardCubit extends Cubit<PickupBoardState> {
     this._observeBoardSnapshot,
     this._getMenuImage,
     this._getTranslation,
-    this._getDeviceInfo,
-    this._observeDeviceInfoChanged,
+    this._deviceRepository,
   ) : super(const PickupBoardState()) {
     _subscription = _observeBoardSnapshot().listen(_onSnapshot);
     unawaited(_loadDeviceInfo());
-    _deviceInfoChangedSubscription = _observeDeviceInfoChanged().listen(
+    _deviceInfoChangedSubscription = _deviceRepository.deviceInfoChanges.listen(
       (_) => unawaited(_loadDeviceInfo()),
     );
   }
@@ -44,15 +42,14 @@ class PickupBoardCubit extends Cubit<PickupBoardState> {
   StreamSubscription<BoardSnapshot>? _subscription;
 
   // FlowUpdater link: the device record is only logged for now (no UI yet).
-  final GetDeviceInfoUsecase _getDeviceInfo;
-  final ObserveDeviceInfoChangedUsecase _observeDeviceInfoChanged;
+  final DeviceRepository _deviceRepository;
   StreamSubscription<void>? _deviceInfoChangedSubscription;
 
   /// Reads the device record from FlowUpdater and logs it. No UI yet: the
   /// connection check is done through logcat (tag `PickupBoard`).
   Future<void> _loadDeviceInfo() async {
     try {
-      final device = await _getDeviceInfo();
+      final device = await _deviceRepository.getDeviceInfo();
       if (isClosed) return;
       Log.i('PickupBoard', 'Device info loaded: $device');
     } catch (e) {

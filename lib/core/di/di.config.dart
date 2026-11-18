@@ -22,9 +22,6 @@ import '../../data/sources/remote/mqtt_board_data_source.dart' as _i870;
 import '../../domain/repositories/board_repository.dart' as _i872;
 import '../../domain/repositories/device_repository.dart' as _i454;
 import '../../domain/repositories/menu_image_repository.dart' as _i1028;
-import '../../domain/usecases/device/get_device_info_usecase.dart' as _i677;
-import '../../domain/usecases/device/observe_device_info_changed_usecase.dart'
-    as _i373;
 import '../../domain/usecases/get_menu_image_usecase.dart' as _i10;
 import '../../domain/usecases/get_translation_usecase.dart' as _i67;
 import '../../domain/usecases/index.dart' as _i447;
@@ -52,12 +49,6 @@ _i174.GetIt $initGetIt(
   gh.singleton<_i1028.MenuImageRepository>(
     () => _i668.MenuRepositoryImpl(gh<_i25.IMenuSheetDataSource>()),
   );
-  gh.factory<_i677.GetDeviceInfoUsecase>(
-    () => _i677.GetDeviceInfoUsecase(gh<_i454.DeviceRepository>()),
-  );
-  gh.factory<_i373.ObserveDeviceInfoChangedUsecase>(
-    () => _i373.ObserveDeviceInfoChangedUsecase(gh<_i454.DeviceRepository>()),
-  );
   gh.factory<_i10.GetMenuImageUsecase>(
     () => _i10.GetMenuImageUsecase(gh<_i1028.MenuImageRepository>()),
   );
@@ -69,8 +60,7 @@ _i174.GetIt $initGetIt(
       gh<_i447.ObserveBoardSnapshotUsecase>(),
       gh<_i447.GetMenuImageUsecase>(),
       gh<_i447.GetTranslationUsecase>(),
-      gh<_i677.GetDeviceInfoUsecase>(),
-      gh<_i373.ObserveDeviceInfoChangedUsecase>(),
+      gh<_i454.DeviceRepository>(),
     ),
   );
   return getIt;
