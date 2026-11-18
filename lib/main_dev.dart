@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +7,7 @@ import 'package:pickup_board/core/constants/index.dart';
 import 'package:pickup_board/core/di/index.dart';
 import 'package:pickup_board/core/env/env.dart';
 import 'package:pickup_board/core/theme/index.dart';
+import 'package:pickup_board/data/platform/flow_updater_service.dart';
 import 'package:pickup_board/presentation/cubit/pickup_board/index.dart';
 import 'package:pickup_board/presentation/screens/index.dart';
 
@@ -21,7 +24,16 @@ void main() {
   // picks up the corrected value automatically).
   LocalSubnetResolver.resolve();
   setupLocator(Env.dev());
+  // Don't await it before runApp: if FlowUpdater is missing, startup must not
+  // wait. The SDK keeps reconnecting in the background either way.
+  final FlowUpdaterService updater = getIt<FlowUpdaterService>();
+  unawaited(updater.connect());
   runApp(const PickupBoardApp());
+  // UI is up: report ready for FlowUpdater's IPC_READY health check once the
+  // first frame is drawn (same timing as FlowKioskApp).
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => unawaited(updater.markReady()),
+  );
 }
 
 class PickupBoardApp extends StatelessWidget {

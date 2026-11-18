@@ -12,13 +12,19 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../data/platform/flow_updater_service.dart' as _i21;
 import '../../data/repositories/board_repository_impl.dart' as _i779;
+import '../../data/repositories/device_repository_impl.dart' as _i34;
 import '../../data/repositories/menu_repository_impl.dart' as _i668;
 import '../../data/sources/mock/mock_board_data_source.dart' as _i140;
 import '../../data/sources/remote/menu_sheet_data_source.dart' as _i25;
 import '../../data/sources/remote/mqtt_board_data_source.dart' as _i870;
 import '../../domain/repositories/board_repository.dart' as _i872;
+import '../../domain/repositories/device_repository.dart' as _i454;
 import '../../domain/repositories/menu_image_repository.dart' as _i1028;
+import '../../domain/usecases/device/get_device_info_usecase.dart' as _i677;
+import '../../domain/usecases/device/observe_device_info_changed_usecase.dart'
+    as _i373;
 import '../../domain/usecases/get_menu_image_usecase.dart' as _i10;
 import '../../domain/usecases/get_translation_usecase.dart' as _i67;
 import '../../domain/usecases/index.dart' as _i447;
@@ -33,8 +39,24 @@ _i174.GetIt $initGetIt(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   gh.singleton<_i25.IMenuSheetDataSource>(() => _i25.MenuSheetDataSource());
+  gh.singleton<_i140.IBoardDataSource>(() => _i870.MqttBoardDataSource());
+  gh.singleton<_i872.BoardRepository>(
+    () => _i779.BoardRepositoryImpl(gh<_i140.IBoardDataSource>()),
+  );
+  gh.lazySingleton<_i454.DeviceRepository>(
+    () => _i34.DeviceRepositoryImpl(gh<_i21.FlowUpdaterService>()),
+  );
+  gh.factory<_i684.ObserveBoardSnapshotUsecase>(
+    () => _i684.ObserveBoardSnapshotUsecase(gh<_i872.BoardRepository>()),
+  );
   gh.singleton<_i1028.MenuImageRepository>(
     () => _i668.MenuRepositoryImpl(gh<_i25.IMenuSheetDataSource>()),
+  );
+  gh.factory<_i677.GetDeviceInfoUsecase>(
+    () => _i677.GetDeviceInfoUsecase(gh<_i454.DeviceRepository>()),
+  );
+  gh.factory<_i373.ObserveDeviceInfoChangedUsecase>(
+    () => _i373.ObserveDeviceInfoChangedUsecase(gh<_i454.DeviceRepository>()),
   );
   gh.factory<_i10.GetMenuImageUsecase>(
     () => _i10.GetMenuImageUsecase(gh<_i1028.MenuImageRepository>()),
@@ -42,18 +64,13 @@ _i174.GetIt $initGetIt(
   gh.factory<_i67.GetTranslationUsecase>(
     () => _i67.GetTranslationUsecase(gh<_i1028.MenuImageRepository>()),
   );
-  gh.singleton<_i140.IBoardDataSource>(() => _i870.MqttBoardDataSource());
-  gh.singleton<_i872.BoardRepository>(
-    () => _i779.BoardRepositoryImpl(gh<_i140.IBoardDataSource>()),
-  );
-  gh.factory<_i684.ObserveBoardSnapshotUsecase>(
-    () => _i684.ObserveBoardSnapshotUsecase(gh<_i872.BoardRepository>()),
-  );
   gh.factory<_i237.PickupBoardCubit>(
     () => _i237.PickupBoardCubit(
       gh<_i447.ObserveBoardSnapshotUsecase>(),
       gh<_i447.GetMenuImageUsecase>(),
       gh<_i447.GetTranslationUsecase>(),
+      gh<_i677.GetDeviceInfoUsecase>(),
+      gh<_i373.ObserveDeviceInfoChangedUsecase>(),
     ),
   );
   return getIt;

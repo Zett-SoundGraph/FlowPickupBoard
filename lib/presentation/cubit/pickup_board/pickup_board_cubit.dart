@@ -4,15 +4,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:pickup_board/core/constants/index.dart';
+import 'package:pickup_board/core/utils/log.dart';
 import 'package:pickup_board/domain/entities/index.dart';
+import 'package:pickup_board/domain/usecases/device/get_device_info_usecase.dart';
+import 'package:pickup_board/domain/usecases/device/observe_device_info_changed_usecase.dart';
 import 'package:pickup_board/domain/usecases/index.dart';
 import 'package:pickup_board/presentation/cubit/pickup_board/pickup_board_state.dart';
 
 @injectable
 class PickupBoardCubit extends Cubit<PickupBoardState> {
-  PickupBoardCubit(this._observeBoardSnapshot, this._getMenuImage, this._getTranslation)
-      : super(const PickupBoardState()) {
+  PickupBoardCubit(
+    this._observeBoardSnapshot,
+    this._getMenuImage,
+    this._getTranslation,
+    this._getDeviceInfo,
+    this._observeDeviceInfoChanged,
+  ) : super(const PickupBoardState()) {
     _subscription = _observeBoardSnapshot().listen(_onSnapshot);
+    unawaited(_loadDeviceInfo());
+    _deviceInfoChangedSubscription = _observeDeviceInfoChanged().listen(
+      (_) => unawaited(_loadDeviceInfo()),
+    );
   }
 
   // Fixed Language ID for the pickup-complete circle's message (Language
@@ -30,6 +42,23 @@ class PickupBoardCubit extends Cubit<PickupBoardState> {
   final GetMenuImageUsecase _getMenuImage;
   final GetTranslationUsecase _getTranslation;
   StreamSubscription<BoardSnapshot>? _subscription;
+
+  // FlowUpdater link: the device record is only logged for now (no UI yet).
+  final GetDeviceInfoUsecase _getDeviceInfo;
+  final ObserveDeviceInfoChangedUsecase _observeDeviceInfoChanged;
+  StreamSubscription<void>? _deviceInfoChangedSubscription;
+
+  /// Reads the device record from FlowUpdater and logs it. No UI yet: the
+  /// connection check is done through logcat (tag `PickupBoard`).
+  Future<void> _loadDeviceInfo() async {
+    try {
+      final device = await _getDeviceInfo();
+      if (isClosed) return;
+      Log.i('PickupBoard', 'Device info loaded: $device');
+    } catch (e) {
+      Log.w('PickupBoard', 'getDeviceInfo failed: $e');
+    }
+  }
 
   // Bottom-bar message queue: each raw event is resolved (translated +
   // placeholders filled) into a MachineStatus as soon as it arrives, then
@@ -114,6 +143,7 @@ class PickupBoardCubit extends Cubit<PickupBoardState> {
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _deviceInfoChangedSubscription?.cancel();
     _advanceTimer?.cancel();
     return super.close();
   }

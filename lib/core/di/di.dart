@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:pickup_board/core/di/di.config.dart';
 import 'package:pickup_board/core/di/service_locator.dart';
 import 'package:pickup_board/core/env/env.dart';
+import 'package:pickup_board/data/platform/flow_updater_service.dart';
 import 'package:pickup_board/domain/repositories/menu_image_repository.dart';
 
 export 'package:pickup_board/core/di/service_locator.dart';
@@ -16,6 +17,9 @@ export 'package:pickup_board/core/di/service_locator.dart';
 )
 void setupLocator(Env env) {
   getIt.registerSingleton<Env>(env);
+  // One FlowUpdater link for the whole app (see FlowUpdaterService). Registered
+  // by hand, like FlowKioskApp, before the generated graph that depends on it.
+  getIt.registerSingleton<FlowUpdaterService>(FlowUpdaterService());
   $initGetIt(getIt);
 
   // Fired-and-forgotten so a slow/offline sheet fetch can't block app
